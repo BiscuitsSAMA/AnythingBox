@@ -1,80 +1,45 @@
-//
-//  ContentView.swift
-//  AnythingBox
-//
-//  Created by 余俊箴 on 2026/4/1.
-//
-
 import SwiftUI
 import SwiftData
 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
+    @StateObject private var llmService = MockLLMService()
+    @State private var selectedTab: Tab = .home
+
+    enum Tab {
+        case home, categories, ai, settings
+    }
 
     var body: some View {
-        NavigationViewWrapper {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
+        TabView(selection: $selectedTab) {
+            HomeView()
+                .tabItem {
+                    Label("记录", systemImage: "square.and.pencil")
                 }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
+                .tag(Tab.home)
+
+            CategoryListView()
+                .tabItem {
+                    Label("分类", systemImage: "folder")
                 }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
+                .tag(Tab.categories)
+
+            AICompanionView(llmService: llmService)
+                .tabItem {
+                    Label("伙伴", systemImage: "bubble.left.and.bubble.right")
                 }
-            }
-        }
-    }
+                .tag(Tab.ai)
 
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
+            SettingsView(llmService: llmService)
+                .tabItem {
+                    Label("设置", systemImage: "gearshape")
+                }
+                .tag(Tab.settings)
         }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
-        }
-    }
-}
-
-fileprivate struct NavigationViewWrapper<Content: View>: View {
-    let content: () -> Content
-
-    var body: some View {
-#if os(macOS)
-        NavigationSplitView {
-            content()
-        } detail: {
-            Text("Select an item")
-        }
-#else
-        content()
-#endif
+        .tint(.purple)
     }
 }
 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: [Entry.self, BoxCategory.self, EntryAttachment.self, AIConversation.self, AIMessage.self], inMemory: true)
 }

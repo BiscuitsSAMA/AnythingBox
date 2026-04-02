@@ -1,10 +1,3 @@
-//
-//  AnythingBoxApp.swift
-//  AnythingBox
-//
-//  Created by 余俊箴 on 2026/4/1.
-//
-
 import SwiftUI
 import SwiftData
 
@@ -12,10 +5,13 @@ import SwiftData
 struct AnythingBoxApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Entry.self,
+            BoxCategory.self,
+            EntryAttachment.self,
+            AIConversation.self,
+            AIMessage.self,
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
